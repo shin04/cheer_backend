@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+    postgres:
+        build:
+            context: ./docker/postgres
+        container_name: postgres 
+        ports: 
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=cheer_postgres
+            - POSTGRES_DB=cheer_db
+
+    golang:
+        build:
+            context: ./docker/go
+        container_name: go-app
+        ports: 
+            - 8080:8080
+        volumes: 
+            - .:/go/src
+        working_dir: /go/src/app
+        tty: true
+        depends_on:
+            - postgres
+        command: fresh
+    
+    nginx:
+        build: 
+            context: ./docker/nginx
+        container_name: nginx
+        ports:
+            - 80:80
+        depends_on:
+            - "golang"
+        environment:
+            - TZ=Asia/Tokyo
+        volumes: 
+            - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
